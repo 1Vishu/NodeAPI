@@ -1,0 +1,5 @@
+
+# Ignore node_modules directory
+node_modules/
+
+# Other common entries can also be added here if needed
