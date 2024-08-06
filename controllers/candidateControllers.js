@@ -96,10 +96,8 @@ exports.deleteCandidate = async (req, res) => {
 exports.voteCandidate = async (req, res) => {
   //No admin can vote
   // user an only vote once
-  const candidateId = req.params.candidateID;
-  const userId = req.EncodedData.id;
-  console.log("candidate ID is", candidateId);
-  console.log("user ID is", userId);
+  candidateId = req.params.candidateID;
+  userId = req.EncodedData.id;
 
   try {
     // Find the Candidate document with the specified candidateId
@@ -109,20 +107,20 @@ exports.voteCandidate = async (req, res) => {
     if (!candidate) {
       return apiResponse.notFoundResponse(res, "Candidate Not Found");
     }
+
     const user = await User.findById(userId);
-    console.log("user.role ", user.role);
     if (!user) {
       return apiResponse.notFoundResponse(res, "User Not Found");
-    }
-    if (user.isVoted) {
-      return apiResponse.notFoundResponse(res, "You have already voted");
     }
     if (user.role == "admin") {
       return apiResponse.notFoundResponse(res, "Admin is not allowed to vote");
     }
+    if (user.isVoted) {
+      return apiResponse.notFoundResponse(res, "You have already voted");
+    }
 
-    //Update the candidate ocument to record the vote
-    candidate.votes.push({user:userId});
+    //Update the candidate document to record the vote
+    candidate.votes.push({ user: userId });
     //candidate.votes.push({ user: userId });
     candidate.voteCount++;
     await candidate.save();
@@ -152,6 +150,20 @@ exports.voteCount = async (req, res) => {
     });
 
     return apiResponse.successResponseWithData(res, "", voterecord);
+  } catch (err) {
+    return apiResponse.ErrorResponse(res, "Internal Server error.");
+  }
+};
+
+// Get List of all candidates with only name and party fields
+exports.candidateList = async (req, res) => {
+  try {
+    // Find all candidates and select only the name and party fields, excluding _id
+    const candidates = await Candidate.find({}, "name party -_id");
+
+    // Return the list of candidates
+    res.status(200).json(candidates);
+    return apiResponse.successResponseWithData(res, "", candidates);
   } catch (err) {
     return apiResponse.ErrorResponse(res, "Internal Server error.");
   }
